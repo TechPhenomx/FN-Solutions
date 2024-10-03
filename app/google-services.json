@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "139971807825",
+    "project_id": "fn-solutions",
+    "storage_bucket": "fn-solutions.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:139971807825:android:ca0cce3ce5533d90ea0670",
+        "android_client_info": {
+          "package_name": "com.example.fnsolutions"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "139971807825-6cbd3gm1365ahfe35o3i4hat62s8uctf.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.fnsolutions",
+            "certificate_hash": "b70ae22b05db05fe24619cd9ed8bb22cfe9f6fc6"
+          }
+        },
+        {
+          "client_id": "139971807825-nrnsn9hier11rdg2tdt308fqjod2fegt.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBCj_RLmYaO7dWia2JF8sEEMOnnaJ1skgA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "139971807825-nrnsn9hier11rdg2tdt308fqjod2fegt.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

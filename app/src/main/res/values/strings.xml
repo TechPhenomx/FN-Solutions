@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">FN Solutions</string>
+    <string name="extended_fab_content_desc">\nBuy a new connection</string>
+    <string name="extended_fab_label">Buy a New Connection</string>
+    <string name="user_photo">user photo\n</string>
+</resources>
