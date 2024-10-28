@@ -1,92 +1,94 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".HelpAndSupportActivity">
+    android:orientation="vertical"
+    android:id="@+id/main"
+   >
 
     <include
         android:id="@+id/toolbar"
         layout="@layout/toolbar" />
 
-    <com.airbnb.lottie.LottieAnimationView
-        android:layout_below="@+id/toolbar"
-        android:id="@+id/helpSupportAnimation"
-        android:layout_width="match_parent"
-        android:layout_height="250dp"
-        app:lottie_rawRes="@raw/help_and_support_animation"
-        app:lottie_autoPlay="true"
-        app:lottie_loop="true"/>
-
-    <androidx.core.widget.NestedScrollView
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@id/helpSupportAnimation"
-        android:padding="16dp"
-        android:fillViewport="true"> <!-- Ensure the scroll view fills the viewport -->
+        android:orientation="vertical"
+        android:padding="16dp">
 
-        <LinearLayout
+        <TextView
+            android:id="@+id/titleTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Let's Find Out The Issue"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="16dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Select Issues:"
+            android:textSize="20sp"
+            android:layout_marginBottom="8dp"/>
+
+        <CheckBox
+            android:id="@+id/noInternetCheckbox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="No Internet Connection"
+            android:textSize="18sp"
+            android:layout_marginBottom="8dp"/>
+
+        <CheckBox
+            android:id="@+id/disconnectsFrequentlyCheckbox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Wi-Fi Signal Disconnects Frequently"
+            android:textSize="18sp"
+            android:layout_marginBottom="8dp"/>
+
+        <CheckBox
+            android:id="@+id/cutWireCheckbox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Cut Wire"
+            android:textSize="18sp"
+            android:layout_marginBottom="8dp"/>
+
+        <CheckBox
+            android:id="@+id/slowSpeedCheckbox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Internet Speed is Slow"
+            android:textSize="18sp"
+            android:layout_marginBottom="8dp"/>
+
+        <CheckBox
+            android:id="@+id/otherCheckbox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Other"
+            android:textSize="18sp"
+            android:layout_marginBottom="16dp"/>
+
+        <EditText
+            android:id="@+id/issueDescriptionEditText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:hint="Describe the Issue (optional)"
+            android:inputType="textMultiLine"
+            android:lines="4"
+            android:layout_marginBottom="16dp"/>
 
-            <com.google.android.material.textfield.TextInputLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Your Name"
-                app:boxStrokeColor="?attr/colorPrimary"
-                app:hintEnabled="true">
+        <Button
+            android:id="@+id/helpAndSupportSubmitButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Submit Ticket"/>
 
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/nameInput"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:padding="12dp" />
-            </com.google.android.material.textfield.TextInputLayout>
+    </LinearLayout>
 
-            <com.google.android.material.textfield.TextInputLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Your Email"
-                app:boxStrokeColor="?attr/colorPrimary"
-                app:hintEnabled="true"
-                android:layout_marginTop="16dp">
 
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/emailInput"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="textEmailAddress"
-                    android:padding="12dp" />
-            </com.google.android.material.textfield.TextInputLayout>
 
-            <com.google.android.material.textfield.TextInputLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Describe your issue"
-                app:boxStrokeColor="?attr/colorPrimary"
-                app:hintEnabled="true"
-                android:layout_marginTop="16dp">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/issueDescription"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="textMultiLine"
-                    android:lines="5"
-                    android:padding="12dp" />
-            </com.google.android.material.textfield.TextInputLayout>
-
-            <Button
-                android:id="@+id/submitTicketButton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Submit Ticket"
-                android:layout_marginTop="16dp"
-                android:backgroundTint="?attr/colorPrimary"
-                android:textColor="@android:color/white"/>
-        </LinearLayout>
-    </androidx.core.widget.NestedScrollView>
-</RelativeLayout>
+</LinearLayout>

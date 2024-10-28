@@ -15,6 +15,7 @@ firebaseDatabase = "21.0.0"
 firebaseDatabaseVersion = "21.0.0"
 googleFirebaseDatabase = "21.0.0"
 googleFirebaseDatabaseVersion = "21.0.0"
+firebaseFirestore = "25.1.0"
 
 [libraries]
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
@@ -28,6 +29,7 @@ activity = { group = "androidx.activity", name = "activity", version.ref = "acti
 constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
 firebase-auth = { group = "com.google.firebase", name = "firebase-auth", version.ref = "firebaseAuth" }
 firebase-database = { group = "com.google.firebase", name = "firebase-database", version.ref = "googleFirebaseDatabaseVersion" }
+firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore", version.ref = "firebaseFirestore" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

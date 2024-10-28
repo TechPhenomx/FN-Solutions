@@ -7,11 +7,14 @@ import android.util.Log;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
@@ -21,6 +24,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 public class SplashActivity extends AppCompatActivity {
     private FirebaseAuth mAuth;
     private FirebaseFirestore db;
+    FirebaseUser currentUser;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,48 +41,48 @@ public class SplashActivity extends AppCompatActivity {
         // Initialize Firebase Auth and Firestore
         mAuth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
-
-        FirebaseUser currentUser = mAuth.getCurrentUser();
+        currentUser = mAuth.getCurrentUser();
 
         new Handler().postDelayed(() -> {
             if (currentUser != null) {
-                // User is signed in, retrieve user data and redirect to MainActivity
-                getUserData(currentUser);
+//                getUserData(currentUser);
+                Intent moveToMain = new Intent(SplashActivity.this, MainActivity.class);
+                startActivity(moveToMain);
+                finish();
+
             } else {
                 // User is not signed in, redirect to Login_Registration_Activity
-                Intent moveToLogin = new Intent(SplashActivity.this, Login_Registration_Activity.class);
+                Intent moveToLogin = new Intent(SplashActivity.this, Login.class);
                 startActivity(moveToLogin);
                 finish();
-            } // User is not signed in, redirect to Login_Registration_Activity
-
-//            startActivity(new Intent(SplashActivity.this, Login_Registration_Activity.class));
-//            finish();
+            }
         }, 4000);
     }
 
     public void getUserData(FirebaseUser user) {
-        DocumentReference docRef = db.collection("users").document(user.getUid());
-        docRef.get().addOnCompleteListener(task -> {
-            if (task.isSuccessful()) {
-                DocumentSnapshot document = task.getResult();
-                if (document.exists()) {
-                    // Extract the name from the document
-                    String name = (String) document.getData().get("name");
 
-                    // Redirect to MainActivity with the user's name
-                    Intent moveToMain = new Intent(SplashActivity.this, MainActivity.class);
-                    moveToMain.putExtra("USER_NAME", name);
-                    startActivity(moveToMain);
-                    finish();
+        DocumentReference userDatabase = db.collection("user").document(currentUser.getUid());
+
+        userDatabase.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                if (task.isSuccessful()) {
+                    DocumentSnapshot document = task.getResult();
+                    if (document.exists()) {
+
+                        String userName = document.getString("name");
+
+                        Intent moveToMain = new Intent(SplashActivity.this, MainActivity.class);
+                        moveToMain.putExtra("name", userName);
+                        startActivity(moveToMain);
+                        finish();
+
+                    } else {
+                        Log.d("TAG", "No such document");
+                    }
                 } else {
-                    Log.d("TAG", "No such document");
-                    Toast.makeText(this, "User data not found", Toast.LENGTH_SHORT).show();
-
-//                    startActivity(new Intent(SplashActivity.this, LoginActivity.class));
+                    Log.d("TAG", "get failed with ", task.getException());
                 }
-            } else {
-                Toast.makeText(this, "Failed to fetch user data", Toast.LENGTH_SHORT).show();
-                Log.d("TAG", "Sign In Failed. Contact Administration", task.getException());
             }
         });
     }

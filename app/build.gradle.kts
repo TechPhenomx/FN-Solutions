@@ -48,5 +48,6 @@ dependencies {
     androidTestImplementation(libs.espresso.core)
     implementation (libs.lottie)
     implementation(platform(libs.firebase.bom))
-
+    implementation("org.aviran.cookiebar2:cookiebar2:1.1.5")
+    implementation("com.google.code.gson:gson:2.8.8") // Check for the latest version
 }

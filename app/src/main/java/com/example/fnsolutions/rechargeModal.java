@@ -1,11 +1,12 @@
 package com.example.fnsolutions;
 
 public class rechargeModal {
-    String timePeriod, planPrice, speedMBps;
+    String timePeriod, effectiveMrp, mrp, speedMBps;
 
-    rechargeModal(String timePeriod, String planPrice, String speedMBps){
+    rechargeModal(String timePeriod, String effectiveMrp, String speedMBps, String mrp){
         this.timePeriod = timePeriod;
-        this.planPrice = planPrice;
+        this.effectiveMrp = effectiveMrp;
         this.speedMBps = speedMBps;
+        this.mrp = mrp;
     }
 }
