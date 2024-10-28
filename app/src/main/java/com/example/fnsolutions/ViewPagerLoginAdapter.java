@@ -23,6 +23,7 @@ public class ViewPagerLoginAdapter extends FragmentStateAdapter {
         }
     }
 
+
     @Override
     public int getItemCount() {
         return 2;
