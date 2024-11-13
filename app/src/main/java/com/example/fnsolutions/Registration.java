@@ -41,6 +41,8 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.PhoneAuthCredential;
 import com.google.firebase.auth.PhoneAuthOptions;
 import com.google.firebase.auth.PhoneAuthProvider;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.SetOptions;
 
@@ -232,17 +234,13 @@ public class Registration extends AppCompatActivity {
     }
 
     private void signInWithPhoneAuthCredential(PhoneAuthCredential credential) {
-        Toast.makeText(Registration.this, "signInWithPhoneAuthCredential", Toast.LENGTH_SHORT).show();
         mAuth.signInWithCredential(credential).addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
             @Override
             public void onComplete(@NonNull Task<AuthResult> task) {
                 if (task.isSuccessful()) {
                     // Sign in success, update UI with the signed-in user's information
                     verifiedUser = task.getResult().getUser();
-
-//                    linkingUserWithEmail();
-                    createUser(registerFullName.getText().toString(), registerPhone.getText().toString(), registerAddress.getText().toString());
-
+                    isUserAvailable();
 
                 } else {
 
@@ -263,12 +261,18 @@ public class Registration extends AppCompatActivity {
     }
 
     public void createUser(String userFullName, String userPhoneNumber, String userAddress) {
+
         Map<String, Object> userData = new HashMap<>();
         userData.put("name", userFullName);
         userData.put("phone", userPhoneNumber);
         userData.put("address", userAddress);
+        userData.put("createDate", FieldValue.serverTimestamp());
+        userData.put("updateDate", FieldValue.serverTimestamp());
+        userData.put("userType", "customer");
+        userData.put("userStatus", "Inactive");
+        userData.put("userID", verifiedUser.getUid());
 
-        db.collection("RegisteredUser").document(verifiedUser.getUid()).set(userData, SetOptions.merge()).addOnSuccessListener(new OnSuccessListener<Void>() {
+        db.collection("user").document(verifiedUser.getUid()).set(userData, SetOptions.merge()).addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
             public void onSuccess(Void unused) {
 
@@ -290,6 +294,41 @@ public class Registration extends AppCompatActivity {
 
     public void showMessage(String message) {
         CookieBar.build(Registration.this).setMessage(message).setCookiePosition(CookieBar.TOP).setDuration(4000).show();
+    }
+
+    public void isUserAvailable(){
+        db.collection("user").document(verifiedUser.getUid())
+                .get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+                        if (task.isSuccessful()) {
+                            DocumentSnapshot document = task.getResult();
+
+                            if (document.exists()) {
+                                FirebaseAuth.getInstance().signOut();
+                                showMessage("Phone Number is already registered");
+                                loading_overlay.setVisibility(View.GONE);
+                                registrationActivity.setVisibility(View.VISIBLE);
+                                register_page.setVisibility(View.VISIBLE);
+                                verifyNumberAndEmail.setVisibility(View.GONE);
+                                commonUtilities.clearEditText(register_OTP);
+                            } else {
+                                createUser(registerFullName.getText().toString(), registerPhone.getText().toString(), registerAddress.getText().toString());
+                            }
+                        } else {
+                            Toast.makeText(Registration.this, "Some Error Occurred", Toast.LENGTH_SHORT).show();
+                            FirebaseAuth.getInstance().signOut();
+                            loading_overlay.setVisibility(View.GONE);
+                            registrationActivity.setVisibility(View.VISIBLE);
+                            register_page.setVisibility(View.VISIBLE);
+                            verifyNumberAndEmail.setVisibility(View.GONE);
+                            commonUtilities.clearEditText(register_OTP);
+
+                        }
+                    }
+                });
+
     }
 
 

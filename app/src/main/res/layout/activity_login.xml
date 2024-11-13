@@ -8,8 +8,7 @@
 
     <include
         android:id="@+id/loading_overlay"
-        layout="@layout/loading_overlay"
-        />
+        layout="@layout/loading_overlay" />
 
     <LinearLayout
         android:id="@+id/login_page"
@@ -17,6 +16,12 @@
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:visibility="visible">
+
+        <FrameLayout
+            android:id="@+id/fragment_container"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone" />
 
         <com.airbnb.lottie.LottieAnimationView
             android:id="@+id/login_animationView"
@@ -63,6 +68,14 @@
                     android:layout_marginTop="10dp"
                     android:gravity="center"
                     android:text="Forget Password?" />
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/bindUsernameAndPassword"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:gravity="center"
+                    android:text="link Username and Password" />
             </LinearLayout>
 
         </androidx.core.widget.NestedScrollView>
@@ -125,6 +138,7 @@
                     android:inputType="number"
                     android:maxLength="6" />
             </com.google.android.material.textfield.TextInputLayout>
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -134,20 +148,19 @@
                     android:id="@+id/loginResendOTPButton"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Resend OTP"
+                    android:enabled="false"
                     android:gravity="end"
-                    android:enabled="false"/>
+                    android:text="Resend OTP" />
 
                 <com.google.android.material.textview.MaterialTextView
                     android:id="@+id/loginResendOTPCounter"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:gravity="end"
                     android:layout_marginLeft="5dp"
-                    android:enabled="false"/>
+                    android:enabled="false"
+                    android:gravity="end" />
 
             </LinearLayout>
-
 
 
             <com.google.android.material.button.MaterialButton
@@ -183,7 +196,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
                 android:layout_marginLeft="20dp"
-                android:text="Change Password"
+                android:text="Verify"
                 android:textSize="20sp"
                 android:textStyle="bold" />
         </LinearLayout>
@@ -215,8 +228,52 @@
                 android:id="@+id/forgetPasswordVerifyNumberButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Continue"
-                android:enabled="false"/>
+                android:enabled="false"
+                android:text="Continue" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/setUsernameAndPassword"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="10dp"
+            android:orientation="vertical"
+            android:padding="10dp"
+            android:layout_below="@+id/forgetContainerBar"
+            android:visibility="gone">
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                android:hint="Enter Email">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/verifyEmail"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textEmailAddress" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                android:hint="Enter Password">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/verifyPassword"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textPassword" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/verifyUsernameAndPasswordButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Continue" />
 
         </LinearLayout>
 
@@ -224,10 +281,10 @@
             android:id="@+id/forgetPasswordOTPVerifyContainer"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:visibility="gone"
             android:layout_below="@id/forgetContainerBar"
-            android:padding="16dp">
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:visibility="gone">
 
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
@@ -247,8 +304,8 @@
                 android:id="@+id/forgetPasswordVerifyOTPButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Continue"
-                android:enabled="false"/>
+                android:enabled="false"
+                android:text="Continue" />
 
 
         </LinearLayout>
@@ -257,10 +314,10 @@
             android:id="@+id/forgetPassword_changePasswordContainer"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:visibility="gone"
             android:layout_below="@id/forgetContainerBar"
-            android:padding="16dp">
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:visibility="gone">
 
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
@@ -292,8 +349,8 @@
                 android:id="@+id/forgetPasswordNewPasswordButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Continue"
-                android:enabled="false"/>
+                android:enabled="false"
+                android:text="Continue" />
 
         </LinearLayout>
 

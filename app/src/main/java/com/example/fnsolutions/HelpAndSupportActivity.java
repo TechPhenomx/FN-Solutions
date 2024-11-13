@@ -1,11 +1,14 @@
 package com.example.fnsolutions;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -17,6 +20,10 @@ import androidx.core.view.WindowInsetsCompat;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.appbar.MaterialToolbar;
+import com.google.firebase.Timestamp;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.SetOptions;
@@ -26,6 +33,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public class HelpAndSupportActivity extends AppCompatActivity {
 
@@ -33,6 +41,8 @@ public class HelpAndSupportActivity extends AppCompatActivity {
     private EditText issueDescriptionEditText;
     private Button helpAndSupportSubmitButton;
     private FirebaseFirestore db;
+    private FirebaseAuth mAuth = FirebaseAuth.getInstance();
+    private RelativeLayout helpAndSupportContainer, loading_overlay;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,186 +60,187 @@ public class HelpAndSupportActivity extends AppCompatActivity {
             return insets;
         });
 
+        noInternetCheckbox = findViewById(R.id.noInternetCheckbox);
+        slowSpeedCheckbox = findViewById(R.id.slowSpeedCheckbox);
+        otherCheckbox = findViewById(R.id.otherCheckbox);
+        issueDescriptionEditText = findViewById(R.id.issueDescriptionEditText);
+        helpAndSupportSubmitButton = findViewById(R.id.helpAndSupportSubmitButton);
 
-            MaterialToolbar toolbar = findViewById(R.id.appToolbar);
-            if (toolbar != null) {
-                setSupportActionBar(toolbar);
-                getSupportActionBar().setTitle("Help And Support");
-                getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-                getSupportActionBar().setHomeButtonEnabled(true);
-                toolbar.setNavigationOnClickListener(v -> onBackPressed());
+        helpAndSupportContainer = findViewById(R.id.helpAndSupportContainer);
+        loading_overlay = findViewById(R.id.loading_overlay);
+
+        loading_overlay.setVisibility(View.GONE);
+        helpAndSupportContainer.setVisibility(View.VISIBLE);
+
+        MaterialToolbar toolbar = findViewById(R.id.appToolbar);
+        if (toolbar != null) {
+            setSupportActionBar(toolbar);
+            getSupportActionBar().setTitle("Help And Support");
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setHomeButtonEnabled(true);
+            toolbar.setNavigationOnClickListener(v -> onBackPressed());
+        }
+
+
+        // Add listeners for each checkbox to monitor changes
+        noInternetCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> updateSubmitButtonState());
+        slowSpeedCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> updateSubmitButtonState());
+
+        // Add a text watcher to monitor changes in the issue description field
+        issueDescriptionEditText.addTextChangedListener(new android.text.TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int start, int count, int after) {
             }
 
-            noInternetCheckbox = findViewById(R.id.noInternetCheckbox);
-            disconnectsFrequentlyCheckbox = findViewById(R.id.disconnectsFrequentlyCheckbox);
-            cutWireCheckbox = findViewById(R.id.cutWireCheckbox);
-            slowSpeedCheckbox = findViewById(R.id.slowSpeedCheckbox);
-            otherCheckbox = findViewById(R.id.otherCheckbox);
-            issueDescriptionEditText = findViewById(R.id.issueDescriptionEditText);
-            helpAndSupportSubmitButton = findViewById(R.id.helpAndSupportSubmitButton);
+            @Override
+            public void onTextChanged(CharSequence charSequence, int start, int before, int count) {
+                // Re-enable the submit button when description is entered
+                updateSubmitButtonState();
+            }
 
-            helpAndSupportSubmitButton.setOnClickListener(v -> submitIssue());
+            @Override
+            public void afterTextChanged(android.text.Editable editable) {
+            }
+        });
 
-            // Prepare and store recharge plans
-//            setupRechargePlans();
+        // Add listeners for each checkbox to ensure only one is selected at a time
+        noInternetCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isChecked) {
+                slowSpeedCheckbox.setChecked(false);
+                otherCheckbox.setChecked(false);
+            }
+            updateSubmitButtonState();
+        });
 
-            Log.d("HelpAndSupportActivity", "Views initialized successfully");
+        slowSpeedCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isChecked) {
+                noInternetCheckbox.setChecked(false);
+                otherCheckbox.setChecked(false);
+            }
+            updateSubmitButtonState();
+        });
 
-        // Fetch recharge plans
-        fetchAllRechargePlansAsJson();
+        otherCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isChecked) {
+                noInternetCheckbox.setChecked(false);
+                slowSpeedCheckbox.setChecked(false);
+                issueDescriptionEditText.setVisibility(View.VISIBLE);
+            }else{
+                issueDescriptionEditText.setVisibility(View.GONE);
+            }
 
+            updateSubmitButtonState();
+        });
+
+//        helpAndSupportSubmitButton.setOnClickListener(v -> submitIssue());
+
+        helpAndSupportSubmitButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                loading_overlay.setVisibility(View.VISIBLE);
+                helpAndSupportContainer.setVisibility(View.GONE);
+                submitIssue();
+            }
+        });
 
     }
 
-    private void fetchAllRechargePlansAsJson() {
-        db.collection("rechargePlans")
-                .get()
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        List<Map<String, Object>> plansList = new ArrayList<>();
-                        for (QueryDocumentSnapshot document : task.getResult()) {
-                            Map<String, Object> planData = new HashMap<>();
-                            planData.put("id", document.getId()); // Get the document ID
-                            planData.putAll(document.getData());  // Get the document data
-                            plansList.add(planData);
-                        }
-
-                        // Convert the list to JSON
-                        String json = new Gson().toJson(plansList);
-                        Log.d("JSON Data", json);
-
-                        // Optionally handle the JSON string, like sending it to another function
-                        handleJsonData(json);
-                    } else {
-                        Log.w("Firestore", "Error getting documents.", task.getException());
-                        Toast.makeText(this, "Error retrieving data", Toast.LENGTH_SHORT).show();
-                    }
-                });
+    // Method to check if any checkbox is selected and enable the submit button accordingly
+    private void updateSubmitButtonState() {
+        boolean isAnyCheckboxChecked = noInternetCheckbox.isChecked() || slowSpeedCheckbox.isChecked() || otherCheckbox.isChecked();
+        String description = issueDescriptionEditText.getText().toString();
+        boolean isDescriptionEntered = !description.isEmpty();
+        helpAndSupportSubmitButton.setEnabled(isAnyCheckboxChecked || isDescriptionEntered);
     }
-
-    private void handleJsonData(String json) {
-        // Process the JSON string as needed
-        Log.d("JSON Data", "Received JSON: " + json);
-    }
-
-
-//    private void handleRechargePlans(List<Map<String, Object>> plansList) {
-//        // Process the list as needed, e.g., display in a RecyclerView or ListView
-//        for (Map<String, Object> plan : plansList) {
-//            Log.d("Plan", plan.toString());
-//        }
-//    }
-
-
-//    private void setupRechargePlans() {
-//        Map<String, Object> rechargePlans = new HashMap<>();
-//
-//        rechargePlans.put("100", createPlanList(new String[][]{
-//                {"1 Month", "499"},
-//                {"3 Months", "1300"},
-//                {"3+1 Months", "1500"},
-//                {"6 Months", "2500"},
-//                {"6+3 Months", "3700"},
-//                {"12 Months", "4500"},
-//                {"12+3 Months", "6000"},
-//        }));
-//
-//        rechargePlans.put("200", createPlanList(new String[][]{
-//                {"1 Month", "599"},
-//                {"3 Months", "1600"},
-//                {"3+1 Months", "1850"},
-//                {"6 Months", "2900"},
-//                {"6+3 Months", "4150"},
-//                {"12 Months", "5000"},
-//                {"12+3 Months", "7000"},
-//        }));
-//
-//        rechargePlans.put("300", createPlanList(new String[][]{
-//                {"1 Month", "649"},
-//                {"3 Months", "1900"},
-//                {"3+1 Months", "2200"},
-//                {"6 Months", "3300"},
-//                {"6+3 Months", "4600"},
-//                {"12 Months", "5500"},
-//                {"12+3 Months", "8500"},
-//        }));
-//
-//        rechargePlans.put("400", createPlanList(new String[][]{
-//                {"1 Month", "799"},
-//                {"3 Months", "2200"},
-//                {"3+1 Months", "2550"},
-//                {"6 Months", "3700"},
-//                {"6+3 Months", "5050"},
-//                {"12 Months", "6000"},
-//                {"12+3 Months", "10500"},
-//        }));
-//
-//        rechargePlans.put("500", createPlanList(new String[][]{
-//                {"1 Month", "899"},
-//                {"3 Months", "2500"},
-//                {"3+1 Months", "2900"},
-//                {"6 Months", "4100"},
-//                {"6+3 Months", "5500"},
-//                {"12 Months", "6500"},
-//                {"12+3 Months", "13000"},
-//        }));
-//
-//        // Store in Firestore
-//        for (String key : rechargePlans.keySet()) {
-//            db.collection("rechargePlans")
-//                    .document(key)
-//                    .set((Map<String, Object>) rechargePlans.get(key), SetOptions.merge())
-//                    .addOnSuccessListener(aVoid -> Log.d("Firestore", "Document " + key + " successfully written!"))
-//                    .addOnFailureListener(e -> {
-//                        Log.w("Firestore", "Error writing document", e);
-//                        Toast.makeText(this, "Error writing document: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-//                    });
-//        }
-//    }
-
-
-//    private Map<String, Object> createPlanList(String[][] plans) {
-//        Map<String, Object> planMap = new HashMap<>();
-//        for (String[] plan : plans) {
-//            planMap.put(plan[0], plan[1]);  // plan[0] is the time duration, plan[1] is the cost
-//        }
-//        return planMap;
-//    }
-
-
 
     private void submitIssue() {
-        Map<String, Object> issueData = new HashMap<>();
+        // Create the issue data map
+//        Map<String, Object> issueData = new HashMap<>();
+        Map<String, Object> ticketData = new HashMap<>();
+        Map<String, Object> ticketMap = new HashMap<>();
+        String issue = "";
+
+        // Add issue checkboxes
         if (noInternetCheckbox.isChecked()) {
-            issueData.put("No Internet Connection", true);
+//            issueData.put("No Internet Connection", true);
+            issue = "No Internet Connection";
         }
-        if (disconnectsFrequentlyCheckbox.isChecked()) {
-            issueData.put("Wi-Fi Signal Disconnects Frequently", true);
-        }
-        if (cutWireCheckbox.isChecked()) {
-            issueData.put("Cut Wire", true);
-        }
+
         if (slowSpeedCheckbox.isChecked()) {
-            issueData.put("Internet Speed is Slow", true);
+//            issueData.put("Internet Speed is Slow", true);
+            issue = "Slow Internet Speed";
         }
         if (otherCheckbox.isChecked()) {
-            issueData.put("Other", true);
+//            issueData.put("Other", true);
+            issue = "Other";
         }
 
+        // Get the issue description, and set a default value if empty
         String description = issueDescriptionEditText.getText().toString();
-        if (!description.isEmpty()) {
-            issueData.put("Description", description);
+        if (description.isEmpty()) {
+            description = "No description provided";  // Default description
         }
 
-        Log.d("IssueData", issueData.toString());
+        ticketMap.put("Description", description);
 
-        db.collection("ticketRaised").document("user").set(issueData, SetOptions.merge())
-                .addOnSuccessListener(unused -> {
-                    Toast.makeText(HelpAndSupportActivity.this, "DocumentSnapshot successfully written!", Toast.LENGTH_SHORT).show();
-                })
-                .addOnFailureListener(e -> {
-                    Log.w("TAG", "Error writing document", e);
-                    Toast.makeText(HelpAndSupportActivity.this, "Error writing document", Toast.LENGTH_SHORT).show();
+        String userId = mAuth.getCurrentUser().getUid();
+
+        DocumentReference userDocRef = db.collection("users").document(userId);
+
+        DocumentReference userTicketDoc = db.collection("tickets").document(userId);
+
+        // Add the issue data
+//        ticketMap.put("issue", issueData);
+
+        // Add additional fields to the ticket data
+        ticketMap.put("createDate", Timestamp.now());  // Current timestamp
+        ticketMap.put("ticketID", UUID.randomUUID().toString());  // Random ticket ID
+        ticketMap.put("ticketStatus", "pending");  // Static ticket status as "pending"
+        ticketMap.put("updateDate", Timestamp.now());  // Current timestamp
+        ticketMap.put("issue", issue);
+
+        // Add the ticket map to the ticketArray
+        ticketData.put("ticketArray", FieldValue.arrayUnion(ticketMap));
+
+        // Add the user data reference to the ticket document
+        ticketData.put("userData", userDocRef);  // Add a reference to the user document
+
+        // Now check if the document already exists for the user and update the ticket array
+        userTicketDoc.get().addOnSuccessListener(documentSnapshot -> {
+            if (documentSnapshot.exists()) {
+                // If the document exists, update the ticketArray
+                db.collection("tickets").document(userId).update("ticketArray", FieldValue.arrayUnion(ticketMap)).addOnSuccessListener(unused -> {
+                    Toast.makeText(HelpAndSupportActivity.this, "Ticket submitted successfully!", Toast.LENGTH_SHORT).show();
+
+                }).addOnFailureListener(e -> {
+                    Log.e("TAG", "Error updating ticket array: " + e.getMessage(), e);
+                    Toast.makeText(HelpAndSupportActivity.this, "Error submitting ticket: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+
                 });
+
+                startActivity(new Intent(HelpAndSupportActivity.this, MainActivity.class));
+                finish();
+            } else {
+                // If the document doesn't exist, create it from scratch
+                ticketData.put("ticketArray", FieldValue.arrayUnion(ticketMap));
+                ticketData.put("userData", userDocRef);  // Add a reference to the user document
+
+                // Create a new document in Firestore
+                userTicketDoc.set(ticketData).addOnSuccessListener(unused -> {
+                    Toast.makeText(HelpAndSupportActivity.this, "Ticket submitted successfully!", Toast.LENGTH_SHORT).show();
+                }).addOnFailureListener(e -> {
+                    Log.e("TAG", "Error creating ticket document: " + e.getMessage(), e);
+                    Toast.makeText(HelpAndSupportActivity.this, "Error submitting ticket: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
+
+                startActivity(new Intent(HelpAndSupportActivity.this, MainActivity.class));
+                finish();
+            }
+        }).addOnFailureListener(e -> {
+            Log.e("TAG", "Error checking ticket document: " + e.getMessage(), e);
+            Toast.makeText(HelpAndSupportActivity.this, "Error checking existing tickets: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        });
     }
+
+
 }

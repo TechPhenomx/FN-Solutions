@@ -20,6 +20,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -31,7 +32,9 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textview.MaterialTextView;
 import com.google.firebase.FirebaseException;
 import com.google.firebase.FirebaseTooManyRequestsException;
+import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.EmailAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
 import com.google.firebase.auth.FirebaseAuthMissingActivityForRecaptchaException;
@@ -39,32 +42,40 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.PhoneAuthCredential;
 import com.google.firebase.auth.PhoneAuthOptions;
 import com.google.firebase.auth.PhoneAuthProvider;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 
 import org.aviran.cookiebar2.CookieBar;
 
+import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Login extends AppCompatActivity implements emailLoginFragment.onEmailDataPass, phoneLoginFragment.OnDataPass {
 
+    private FirebaseFirestore db;
     private FirebaseAuth mAuth;
     private String mVerificationId;
     private PhoneAuthProvider.ForceResendingToken mResendToken;
-    private LinearLayout login_page, forgetPasswordPhoneNumber, forgetPasswordOTPVerifyContainer, forgetPassword_changePasswordContainer;
+    private LinearLayout login_page, forgetPasswordPhoneNumber, forgetPasswordOTPVerifyContainer, forgetPassword_changePasswordContainer, setUsernameAndPassword;
     private RelativeLayout loginOTPContainer, forgetPasswordContainer, loading_overlay;
     private TabLayout loginTab;
     private ViewPager2 loginViewpager;
-    private MaterialTextView loginForgetPassword;
-    private MaterialButton loginBuyConnection, loginOTPButton, forgetPasswordVerifyNumberButton, forgetPasswordVerifyOTPButton, forgetPasswordNewPasswordButton;
-    private TextInputEditText loginOTP, forgetPhoneNumber, forgetPasswordOTP, forgetPasswordNewPassword, forgetPasswordConfirmNewPassword;
+    private MaterialTextView loginForgetPassword, bindUsernameAndPassword;
+    private MaterialButton loginBuyConnection, loginOTPButton, forgetPasswordVerifyNumberButton, forgetPasswordVerifyOTPButton, forgetPasswordNewPasswordButton, verifyUsernameAndPasswordButton;
+    private TextInputEditText loginOTP, forgetPhoneNumber, forgetPasswordOTP, forgetPasswordNewPassword, forgetPasswordConfirmNewPassword, verifyEmail, verifyPassword;
     private ImageButton otpBackButton, forgetPasswordBackButton;
-    private Boolean isForgettingPassword = false;
+    private Boolean isForgettingPassword = false, isSettingUsername = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
         // Initialize Firebase Auth
         mAuth = FirebaseAuth.getInstance();
+        db = FirebaseFirestore.getInstance();
 
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
@@ -75,8 +86,11 @@ public class Login extends AppCompatActivity implements emailLoginFragment.onEma
             return insets;
         });
 
+
+
         loading_overlay = findViewById(R.id.loading_overlay);
         loading_overlay.setVisibility(View.GONE);
+        bindUsernameAndPassword = findViewById(R.id.bindUsernameAndPassword);
 
         login_page = findViewById(R.id.login_page);
         loginOTPContainer = findViewById(R.id.loginOTPContainer);
@@ -96,6 +110,11 @@ public class Login extends AppCompatActivity implements emailLoginFragment.onEma
         forgetPasswordVerifyOTPButton = findViewById(R.id.forgetPasswordVerifyOTPButton);
         forgetPasswordNewPasswordButton = findViewById(R.id.forgetPasswordNewPasswordButton);
         forgetPasswordConfirmNewPassword = findViewById(R.id.forgetPasswordConfirmNewPassword);
+
+        setUsernameAndPassword = findViewById(R.id.setUsernameAndPassword);
+        verifyEmail = findViewById(R.id.verifyEmail);
+        verifyPassword = findViewById(R.id.verifyPassword);
+        verifyUsernameAndPasswordButton = findViewById(R.id.verifyUsernameAndPasswordButton);
 
         forgetPasswordPhoneNumber = findViewById(R.id.forgetPasswordPhoneNumber);
         forgetPasswordOTPVerifyContainer = findViewById(R.id.forgetPasswordOTPVerifyContainer);
@@ -118,15 +137,13 @@ public class Login extends AppCompatActivity implements emailLoginFragment.onEma
         //setup Tab layout with viewPager2
         loginViewpager.setAdapter(new ViewPagerLoginAdapter(this));
 
-        new TabLayoutMediator(loginTab, loginViewpager,
-                (tab, position) -> {
-                    if (position == 0) {
-                        tab.setText("Email");
-                    } else {
-                        tab.setText("Phone");
-                    }
-                }
-        ).attach();
+        new TabLayoutMediator(loginTab, loginViewpager, (tab, position) -> {
+            if (position == 0) {
+                tab.setText("Username");
+            } else {
+                tab.setText("Phone");
+            }
+        }).attach();
 
         forgetPasswordVerifyNumberButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -157,9 +174,11 @@ public class Login extends AppCompatActivity implements emailLoginFragment.onEma
                 String userConfirmPassword = forgetPasswordConfirmNewPassword.getText().toString().trim();
 
                 if (!userNewPassword.equals(userConfirmPassword)) {
+                    Toast.makeText(Login.this, "if", Toast.LENGTH_SHORT).show();
                     forgetPasswordNewPassword.setError("Password did not match");
                     forgetPasswordConfirmNewPassword.setError("Password did not match");
                 } else {
+                    Toast.makeText(Login.this, "else", Toast.LENGTH_SHORT).show();
                     commonUtilities.closeKeyboard(Login.this, forgetPasswordConfirmNewPassword);
                     loading_overlay.setVisibility(View.VISIBLE);
                     forgetPasswordContainer.setVisibility(View.GONE);
@@ -222,6 +241,33 @@ public class Login extends AppCompatActivity implements emailLoginFragment.onEma
             }
         });
 
+        bindUsernameAndPassword.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+//                donot delete this
+//                Toast.makeText(Login.this, "clicked", Toast.LENGTH_SHORT).show();
+//                // Instantiate the fragment
+//                VerifyNumberFragment fragment = new VerifyNumberFragment();
+//                FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+//                transaction.replace(R.id.fragment_container, fragment);
+//                transaction.addToBackStack(null);
+//                transaction.commit();
+//                findViewById(R.id.fragment_container).setVisibility(View.VISIBLE);
+
+                isSettingUsername = true;
+                forgetPasswordContainer.setVisibility(View.VISIBLE);
+                login_page.setVisibility(View.GONE);
+
+            }
+        });
+
+        verifyUsernameAndPasswordButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                verifyUsernameAndPassword();
+            }
+        });
+
 //        back pressed Navigation
         OnBackPressedCallback callback = new OnBackPressedCallback(true /* enabled by default */) {
             @Override
@@ -257,7 +303,7 @@ public class Login extends AppCompatActivity implements emailLoginFragment.onEma
     protected void onDestroy() {
         super.onDestroy();
         // Check if user is in forget password flow and sign them out
-        if (isForgettingPassword == true) {
+        if (isForgettingPassword == true || isSettingUsername == true) {
             FirebaseAuth.getInstance().signOut();
         }
     }
@@ -266,7 +312,7 @@ public class Login extends AppCompatActivity implements emailLoginFragment.onEma
     protected void onStop() {
         super.onStop();
         // Check if user is in forget password flow and sign them out
-        if (isForgettingPassword == true) {
+        if (isForgettingPassword == true || isSettingUsername == true ) {
             FirebaseAuth.getInstance().signOut();
         }
     }
@@ -290,15 +336,14 @@ public class Login extends AppCompatActivity implements emailLoginFragment.onEma
     }
 
     public void loginNumber(String phoneNumber) {
-        PhoneAuthOptions options = PhoneAuthOptions.newBuilder(mAuth)
-                .setPhoneNumber(phoneNumber)       // Phone number to verify
+        PhoneAuthOptions options = PhoneAuthOptions.newBuilder(mAuth).setPhoneNumber(phoneNumber)       // Phone number to verify
                 .setTimeout(60L, TimeUnit.SECONDS) // Timeout and unit
                 .setActivity(this)                 // (optional) Activity for callback binding
                 .setCallbacks(new PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
                     @Override
                     public void onVerificationCompleted(@NonNull PhoneAuthCredential credential) {
-//                        Log.d("TAG", "onVerificationCompleted:" + credential);
-//                        signInWithPhoneAuthCredential(credential);
+                        Toast.makeText(Login.this, "You are Verified", Toast.LENGTH_SHORT).show();
+                        signInWithPhoneAuthCredential(credential);
                     }
 
                     @Override
@@ -335,8 +380,7 @@ public class Login extends AppCompatActivity implements emailLoginFragment.onEma
                         mVerificationId = verificationId; // Save verification ID
                         mResendToken = token; // Save resending token
                     }
-                })
-                .build(); // Corrected here
+                }).build(); // Corrected here
         PhoneAuthProvider.verifyPhoneNumber(options);
     }
 
@@ -352,11 +396,11 @@ public class Login extends AppCompatActivity implements emailLoginFragment.onEma
             public void onComplete(@NonNull Task<AuthResult> task) {
                 if (task.isSuccessful()) {
                     // Sign in success, update UI with the signed-in user's information
-
                     FirebaseUser user = task.getResult().getUser();
+                    verifyUser(user);
 
-                    startActivity(new Intent(Login.this, MainActivity.class));
-                    finish();
+//                    startActivity(new Intent(Login.this, MainActivity.class));
+//                    finish();
                     // Update UI
                 } else {
                     // Sign in failed, display a message and update the UI
@@ -405,26 +449,25 @@ public class Login extends AppCompatActivity implements emailLoginFragment.onEma
     };
 
     public void loginEmail(String email, String password) {
-        mAuth.signInWithEmailAndPassword(email, password)
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        if (task.isSuccessful()) {
-                            // Sign in success, update UI with the signed-in user's information
-                            FirebaseUser user = mAuth.getCurrentUser();
+        mAuth.signInWithEmailAndPassword(email, password).addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+            @Override
+            public void onComplete(@NonNull Task<AuthResult> task) {
+                if (task.isSuccessful()) {
+                    // Sign in success, update UI with the signed-in user's information
+                    FirebaseUser user = mAuth.getCurrentUser();
 //                            updateUI(user);
-                            Toast.makeText(Login.this, "logged in", Toast.LENGTH_SHORT).show();
-                            isForgettingPassword = false;
-                            startActivity(new Intent(Login.this, MainActivity.class));
-                            finish();
+                    Toast.makeText(Login.this, "logged in", Toast.LENGTH_SHORT).show();
+                    isForgettingPassword = false;
+                    startActivity(new Intent(Login.this, MainActivity.class));
+                    finish();
 
-                        } else {
-                            // If sign in fails, display a message to the user.
-                            showMessage("You are either not registered or not approved by Administration !", "Invalid Email and Password");
+                } else {
+                    // If sign in fails, display a message to the user.
+                    showMessage("You are either not registered or not approved by Administration !", "Invalid Email and Password");
 //                            updateUI(null);
-                        }
-                    }
-                });
+                }
+            }
+        });
 
     }
 
@@ -432,57 +475,54 @@ public class Login extends AppCompatActivity implements emailLoginFragment.onEma
     //    Forget password
     public void verifyNumber() {
         String userPhone = "+91" + forgetPhoneNumber.getText().toString();
-        PhoneAuthOptions options =
-                PhoneAuthOptions.newBuilder(mAuth)
-                        .setPhoneNumber(userPhone)       // Phone number to verify
-                        .setTimeout(60L, TimeUnit.SECONDS) // Timeout and unit
-                        .setActivity(this)                 // (optional) Activity for callback binding
-                        // If no activity is passed, reCAPTCHA verification can not be used.
-                        .setCallbacks(new PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
+        PhoneAuthOptions options = PhoneAuthOptions.newBuilder(mAuth).setPhoneNumber(userPhone)       // Phone number to verify
+                .setTimeout(60L, TimeUnit.SECONDS) // Timeout and unit
+                .setActivity(this)                 // (optional) Activity for callback binding
+                // If no activity is passed, reCAPTCHA verification can not be used.
+                .setCallbacks(new PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
 
-                            @Override
-                            public void onVerificationCompleted(@NonNull PhoneAuthCredential credential) {
+                    @Override
+                    public void onVerificationCompleted(@NonNull PhoneAuthCredential credential) {
+                        forgetSignInWithPhoneAuthCredential(credential);
+                    }
 
-                            }
+                    @Override
+                    public void onVerificationFailed(@NonNull FirebaseException e) {
+                        if (e instanceof FirebaseAuthInvalidCredentialsException) {
+                            // Invalid request
 
-                            @Override
-                            public void onVerificationFailed(@NonNull FirebaseException e) {
-                                if (e instanceof FirebaseAuthInvalidCredentialsException) {
-                                    // Invalid request
+                            Toast.makeText(Login.this, "Invalid Number. Enter Registered Number", Toast.LENGTH_SHORT).show();
+                            loading_overlay.setVisibility(View.GONE);
+                            forgetPasswordContainer.setVisibility(View.VISIBLE);
 
-                                    Toast.makeText(Login.this, "Invalid Number. Enter Registered Number", Toast.LENGTH_SHORT).show();
-                                    loading_overlay.setVisibility(View.GONE);
-                                    forgetPasswordContainer.setVisibility(View.VISIBLE);
+                        } else if (e instanceof FirebaseTooManyRequestsException) {
+                            // The SMS quota for the project has been exceeded
+                            Toast.makeText(Login.this, "Requested Too Many Times. Try after sometime.", Toast.LENGTH_SHORT).show();
+                            loading_overlay.setVisibility(View.GONE);
+                            forgetPasswordContainer.setVisibility(View.VISIBLE);
+                        } else if (e instanceof FirebaseAuthMissingActivityForRecaptchaException) {
+                            // reCAPTCHA verification attempted with null Activity
+                            loading_overlay.setVisibility(View.GONE);
+                            forgetPasswordContainer.setVisibility(View.VISIBLE);
+                        }
 
-                                } else if (e instanceof FirebaseTooManyRequestsException) {
-                                    // The SMS quota for the project has been exceeded
-                                    Toast.makeText(Login.this, "Requested Too Many Times. Try after sometime.", Toast.LENGTH_SHORT).show();
-                                    loading_overlay.setVisibility(View.GONE);
-                                    forgetPasswordContainer.setVisibility(View.VISIBLE);
-                                } else if (e instanceof FirebaseAuthMissingActivityForRecaptchaException) {
-                                    // reCAPTCHA verification attempted with null Activity
-                                    loading_overlay.setVisibility(View.GONE);
-                                    forgetPasswordContainer.setVisibility(View.VISIBLE);
-                                }
+                    }
 
-                            }
+                    @Override
+                    public void onCodeSent(@NonNull String verificationId, @NonNull PhoneAuthProvider.ForceResendingToken token) {
 
-                            @Override
-                            public void onCodeSent(@NonNull String verificationId,
-                                                   @NonNull PhoneAuthProvider.ForceResendingToken token) {
+                        showMessage("Number Verified. Please Wait for OTP", "");
+                        loading_overlay.setVisibility(View.GONE);
+                        forgetPasswordContainer.setVisibility(View.VISIBLE);
+                        forgetPasswordPhoneNumber.setVisibility(View.GONE);
+                        forgetPasswordOTPVerifyContainer.setVisibility(View.VISIBLE);
 
-                                showMessage("Number Verified. Please Wait for OTP", "");
-                                loading_overlay.setVisibility(View.GONE);
-                                forgetPasswordContainer.setVisibility(View.VISIBLE);
-                                forgetPasswordPhoneNumber.setVisibility(View.GONE);
-                                forgetPasswordOTPVerifyContainer.setVisibility(View.VISIBLE);
-
-                                // Save verification ID and resending token so we can use them later
-                                mVerificationId = verificationId;
-                                mResendToken = token;
-                            }
-                        })          // OnVerificationStateChangedCallbacks
-                        .build();
+                        // Save verification ID and resending token so we can use them later
+                        mVerificationId = verificationId;
+                        mResendToken = token;
+                    }
+                })          // OnVerificationStateChangedCallbacks
+                .build();
         PhoneAuthProvider.verifyPhoneNumber(options);
     }
 
@@ -492,66 +532,192 @@ public class Login extends AppCompatActivity implements emailLoginFragment.onEma
     }
 
     private void forgetSignInWithPhoneAuthCredential(PhoneAuthCredential credential) {
-        mAuth.signInWithCredential(credential)
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        if (task.isSuccessful()) {
-                            // Sign in success, update UI with the signed-in user's information
+        mAuth.signInWithCredential(credential).addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+            @Override
+            public void onComplete(@NonNull Task<AuthResult> task) {
+                if (task.isSuccessful()) {
+                    // Sign in success, update UI with the signed-in user's information
 
-                            FirebaseUser user = task.getResult().getUser();
+                    FirebaseUser user = task.getResult().getUser();
 
-                            showMessage("Your Number is Verified. Now Enter New Password", "");
-                            loading_overlay.setVisibility(View.GONE);
-                            forgetPasswordContainer.setVisibility(View.VISIBLE);
-                            forgetPasswordOTPVerifyContainer.setVisibility(View.GONE);
-                            forgetPassword_changePasswordContainer.setVisibility(View.VISIBLE);
-                            FirebaseAuth.getInstance().signOut();
-
-                        } else {
-                            // Sign in failed, display a message and update the UI
-                            if (task.getException() instanceof FirebaseAuthInvalidCredentialsException) {
-                                // The verification code entered was invalid
-                                showMessage("", "Please Enter Valid OTP");
-                                loading_overlay.setVisibility(View.GONE);
-                                forgetPasswordContainer.setVisibility(View.VISIBLE);
-                                forgetPasswordOTPVerifyContainer.setVisibility(View.VISIBLE);
-
-                                forgetPasswordVerifyOTPButton.setError("Please Enter Valid OTP");
-
-                            }
-                        }
+                    showMessage("Your Number is Verified. Now Enter New Password", "");
+                    loading_overlay.setVisibility(View.GONE);
+                    forgetPasswordContainer.setVisibility(View.VISIBLE);
+                    forgetPasswordOTPVerifyContainer.setVisibility(View.GONE);
+                    if (isForgettingPassword) {
+                        forgetPassword_changePasswordContainer.setVisibility(View.VISIBLE);
+                    } else {
+                        setUsernameAndPassword.setVisibility(View.VISIBLE);
                     }
-                });
+
+
+                } else {
+                    // Sign in failed, display a message and update the UI
+                    if (task.getException() instanceof FirebaseAuthInvalidCredentialsException) {
+                        // The verification code entered was invalid
+                        showMessage("", "Please Enter Valid OTP");
+                        loading_overlay.setVisibility(View.GONE);
+                        forgetPasswordContainer.setVisibility(View.VISIBLE);
+                        forgetPasswordOTPVerifyContainer.setVisibility(View.VISIBLE);
+
+                        forgetPasswordVerifyOTPButton.setError("Please Enter Valid OTP");
+
+                    }
+                }
+            }
+        });
     }
 
     public void changePassword() {
+
+        Toast.makeText(this, "changeeeeee", Toast.LENGTH_SHORT).show();
         FirebaseUser userForget = FirebaseAuth.getInstance().getCurrentUser();
         String userNewPassword = forgetPasswordNewPassword.getText().toString();
 
-        userForget.updatePassword(userNewPassword)
-                .addOnCompleteListener(new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        if (task.isSuccessful()) {
-                            showMessage("", "Password Changed Successfully 🎉");
-                            isForgettingPassword = false;
-                            loading_overlay.setVisibility(View.GONE);
-                            forgetPasswordContainer.setVisibility(View.VISIBLE);
-                            forgetPasswordContainer.setVisibility(View.GONE);
-                            login_page.setVisibility(View.VISIBLE);
+        userForget.updatePassword(userNewPassword).addOnCompleteListener(new OnCompleteListener<Void>() {
+            @Override
+            public void onComplete(@NonNull Task<Void> task) {
+                if (task.isSuccessful()) {
+                    Log.d("change", "changesssssss2");
+                    showMessage("", "Password Changed Successfully 🎉");
+                    isForgettingPassword = false;
+                    loading_overlay.setVisibility(View.GONE);
+                    forgetPasswordContainer.setVisibility(View.VISIBLE);
+                    forgetPasswordContainer.setVisibility(View.GONE);
+                    login_page.setVisibility(View.VISIBLE);
 
-                        } else {
-                            // Handle failure case
-                            showMessage("Failed to change password. Please try again.", "Error");
-                        }
-                    }
-                })
-                .addOnFailureListener(e -> {
-                    // Log the exception for debugging purposes
-                    Log.e("ChangePassword", "Error updating password: ", e);
-                    showMessage("Failed to change password: " + e.getMessage(), "Error");
-                });
+                } else {
+                    // Handle failure case
+                    showMessage("Failed to change password. Please try again.", "Error");
+                }
+            }
+        }).addOnFailureListener(e -> {
+            // Log the exception for debugging purposes
+            Log.e("ChangePassword", "Error updating password: ", e);
+            showMessage("Failed to change password: " + e.getMessage(), "Error");
+        });
+
+        FirebaseAuth.getInstance().signOut();
     }
 
+    public void verifyUser(FirebaseUser user) {
+
+        db.collection("user").document(user.getUid()).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+                if (task.isSuccessful()) {
+                    DocumentSnapshot document = task.getResult();
+                    if (document.exists()) {
+                        if ("Active".equals(document.get("userStatus"))) {
+//                                    Log.d(TAG, "Document found: " + document.getId() + " => " + document.getData());
+                            startActivity(new Intent(Login.this, MainActivity.class));
+                            finish();
+                        } else {
+                            FirebaseAuth.getInstance().signOut();
+                            loading_overlay.setVisibility(View.GONE);
+                            login_page.setVisibility(View.VISIBLE);
+                            showMessage("you are currently not allowed login", "");
+                        }
+//
+                    } else {
+                        FirebaseAuth.getInstance().signOut();
+                        user.delete().addOnCompleteListener(new OnCompleteListener<Void>() {
+                            @Override
+                            public void onComplete(@NonNull Task<Void> task) {
+                                if (task.isSuccessful()) {
+                                    loading_overlay.setVisibility(View.GONE);
+                                    login_page.setVisibility(View.VISIBLE);
+                                    showMessage("You are not Registered with us.", "");
+                                }
+                            }
+                        });
+                    }
+                } else {
+                    FirebaseAuth.getInstance().signOut();
+                    user.delete().addOnCompleteListener(new OnCompleteListener<Void>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Void> task) {
+                            if (task.isSuccessful()) {
+                                loading_overlay.setVisibility(View.GONE);
+                                login_page.setVisibility(View.VISIBLE);
+                                showMessage("Some Error Occurred", "");
+                            }
+                        }
+                    });
+                }
+            }
+        });
+    }
+
+    public void verifyUsernameAndPassword() {
+        DocumentReference docRef = db.collection("user").document(mAuth.getInstance().getCurrentUser().getUid());
+        docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                if (task.isSuccessful()) {
+                    DocumentSnapshot document = task.getResult();
+                    if (document.exists()) {
+                        String email = document.getString("email");
+                        String password = document.getString("password");
+                        if (verifyEmail.getText().toString().trim().equals(email) && verifyPassword.getText().toString().equals(password)) {
+                            AuthCredential credential = EmailAuthProvider.getCredential(email, password);
+                            loading_overlay.setVisibility(View.VISIBLE);
+                            linkUsernameAndPassword(credential);
+
+                        } else {
+                            commonUtilities.showMessage(Login.this, "You have Entered wrong Email and Password", "");
+//                            Toast.makeText(Login.this, "not verified", Toast.LENGTH_SHORT).show();
+                        }
+                    } else {
+                        commonUtilities.showMessage(Login.this, "Some Error Occured. Try again Later", "");
+                        isSettingUsername = false;
+                        loading_overlay.setVisibility(View.GONE);
+                        forgetPasswordContainer.setVisibility(View.GONE);
+                        forgetPasswordContainer.setVisibility(View.GONE);
+                        login_page.setVisibility(View.VISIBLE);
+                    }
+                } else {
+                    commonUtilities.showMessage(Login.this, "Some Error Occured. Try again Later", "");
+                    isSettingUsername = false;
+                    loading_overlay.setVisibility(View.GONE);
+                    forgetPasswordContainer.setVisibility(View.GONE);
+                    forgetPasswordContainer.setVisibility(View.GONE);
+                    login_page.setVisibility(View.VISIBLE);
+                }
+            }
+
+
+        });
+    }
+
+    private void linkUsernameAndPassword(AuthCredential credential) {
+
+        mAuth.getCurrentUser().linkWithCredential(credential).addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+            @Override
+            public void onComplete(@NonNull Task<AuthResult> task) {
+                if (task.isSuccessful()) {
+//                            Log.d(TAG, "linkWithCredential:success");
+                    FirebaseUser user = task.getResult().getUser();
+//                            updateUI(user);
+                    commonUtilities.showMessage(Login.this, "Username and Password is linked Successfully", "");
+                    isSettingUsername = false;
+                    loading_overlay.setVisibility(View.GONE);
+                    forgetPasswordContainer.setVisibility(View.GONE);
+                    setUsernameAndPassword.setVisibility(View.GONE);
+                    login_page.setVisibility(View.VISIBLE);
+
+                } else {
+
+                    Toast.makeText(Login.this, "not registerd", Toast.LENGTH_SHORT).show();
+                    isSettingUsername = false;
+                    loading_overlay.setVisibility(View.GONE);
+                    forgetPasswordContainer.setVisibility(View.GONE);
+                    forgetPasswordContainer.setVisibility(View.GONE);
+                    login_page.setVisibility(View.VISIBLE);
+
+                }
+            }
+        });
+    }
 }

@@ -17,7 +17,7 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 
 public class emailLoginFragment extends Fragment {
-    private TextInputEditText loginEmail, loginPassword;
+    private TextInputEditText loginUsername, loginPassword;
     private onEmailDataPass dataPasser;  // Use your defined interface here
     private MaterialButton emailLoginButton;
 
@@ -45,24 +45,25 @@ public class emailLoginFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_email_login, container, false);
 
-        loginEmail = view.findViewById(R.id.loginEmail);
+        loginUsername = view.findViewById(R.id.loginUsername);
         loginPassword = view.findViewById(R.id.loginPassword);
         emailLoginButton = view.findViewById(R.id.emailLoginButton);
 
         //Email Watcher
-        loginEmail.addTextChangedListener(phoneWatcher);
+        loginUsername.addTextChangedListener(phoneWatcher);
         loginPassword.addTextChangedListener(phoneWatcher);
 
         emailLoginButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String userEmail = loginEmail.getText().toString().trim();
+                String userEmail = loginUsername.getText().toString().trim() + "@fnsolutions.com";
                 String userPassword = loginPassword.getText().toString().trim();
 
                 if (!userEmail.isEmpty() && !userPassword.isEmpty()) {
                     dataPasser.onEmailDataPass(userEmail, userPassword);  // Use dataPasser to pass the data
                 } else {
                     // Handle empty fields (e.g., show a toast message)
+
                 }
             }
         });
@@ -78,11 +79,11 @@ public class emailLoginFragment extends Fragment {
         @Override
         public void onTextChanged(CharSequence s, int start, int before, int count) {
 
-            String userEmail = loginEmail.getText().toString();
+            String username = loginUsername.getText().toString();
             String userPassword = loginPassword.getText().toString();
 
 //            loginButton.setEnabled(!TextUtils.isEmpty(userPhone) && userPhone.length() == 10);
-            emailLoginButton.setEnabled(!TextUtils.isEmpty(userEmail) && !TextUtils.isEmpty(userPassword));
+            emailLoginButton.setEnabled(!TextUtils.isEmpty(username) && !TextUtils.isEmpty(userPassword));
         }
 
         @Override

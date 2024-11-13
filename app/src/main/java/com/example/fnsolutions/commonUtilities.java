@@ -1,5 +1,6 @@
 package com.example.fnsolutions;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
@@ -7,6 +8,8 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 
 import com.google.android.material.textfield.TextInputEditText;
+
+import org.aviran.cookiebar2.CookieBar;
 
 public class commonUtilities {
 
@@ -26,6 +29,16 @@ public class commonUtilities {
             imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
         }
 
+    }
+
+    // Show message using CookieBar
+    public static void showMessage(Activity activity, String message, String title) {
+        CookieBar.build(activity)
+                .setTitle(title)
+                .setMessage(message)
+                .setCookiePosition(CookieBar.TOP)
+                .setDuration(4000)  // Duration of the message
+                .show();
     }
 
 }

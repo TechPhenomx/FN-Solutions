@@ -1,94 +1,105 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:id="@+id/main"
-   >
+    android:orientation="vertical">
 
     <include
-        android:id="@+id/toolbar"
-        layout="@layout/toolbar" />
+        android:id="@+id/loading_overlay"
+        layout="@layout/loading_overlay" />
 
-    <LinearLayout
+    <RelativeLayout
+        android:id="@+id/helpAndSupportContainer"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:layout_height="match_parent">
 
-        <TextView
-            android:id="@+id/titleTextView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Let's Find Out The Issue"
-            android:textSize="28sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="16dp"/>
+        <include
+            android:id="@+id/toolbar"
+            layout="@layout/toolbar" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Select Issues:"
-            android:textSize="20sp"
-            android:layout_marginBottom="8dp"/>
-
-        <CheckBox
-            android:id="@+id/noInternetCheckbox"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="No Internet Connection"
-            android:textSize="18sp"
-            android:layout_marginBottom="8dp"/>
-
-        <CheckBox
-            android:id="@+id/disconnectsFrequentlyCheckbox"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Wi-Fi Signal Disconnects Frequently"
-            android:textSize="18sp"
-            android:layout_marginBottom="8dp"/>
-
-        <CheckBox
-            android:id="@+id/cutWireCheckbox"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Cut Wire"
-            android:textSize="18sp"
-            android:layout_marginBottom="8dp"/>
-
-        <CheckBox
-            android:id="@+id/slowSpeedCheckbox"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Internet Speed is Slow"
-            android:textSize="18sp"
-            android:layout_marginBottom="8dp"/>
-
-        <CheckBox
-            android:id="@+id/otherCheckbox"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Other"
-            android:textSize="18sp"
-            android:layout_marginBottom="16dp"/>
-
-        <EditText
-            android:id="@+id/issueDescriptionEditText"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Describe the Issue (optional)"
-            android:inputType="textMultiLine"
-            android:lines="4"
-            android:layout_marginBottom="16dp"/>
+            android:layout_height="match_parent"
+            android:layout_below="@+id/toolbar"
+            android:orientation="vertical"
+            android:padding="16dp">
 
-        <Button
-            android:id="@+id/helpAndSupportSubmitButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Submit Ticket"/>
+            <TextView
+                android:id="@+id/titleTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:text="Let's Find Out The Issue"
+                android:textSize="28sp"
+                android:textStyle="bold" />
 
-    </LinearLayout>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:text="Select Issues:"
+                android:textSize="20sp" />
 
+            <CheckBox
+                android:id="@+id/noInternetCheckbox"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:text="No Internet Connection"
+                android:textSize="18sp" />
 
+            <!--        <CheckBox-->
+            <!--            android:id="@+id/disconnectsFrequentlyCheckbox"-->
+            <!--            android:layout_width="wrap_content"-->
+            <!--            android:layout_height="wrap_content"-->
+            <!--            android:text="Wi-Fi Signal Disconnects Frequently"-->
+            <!--            android:textSize="18sp"-->
+            <!--            android:layout_marginBottom="8dp"/>-->
 
-</LinearLayout>
+            <!--        <CheckBox-->
+            <!--            android:id="@+id/cutWireCheckbox"-->
+            <!--            android:layout_width="wrap_content"-->
+            <!--            android:layout_height="wrap_content"-->
+            <!--            android:text="Cut Wire"-->
+            <!--            android:textSize="18sp"-->
+            <!--            android:layout_marginBottom="8dp"/>-->
+
+            <CheckBox
+                android:id="@+id/slowSpeedCheckbox"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:text="Internet Speed is Slow"
+                android:textSize="18sp" />
+
+            <CheckBox
+                android:id="@+id/otherCheckbox"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:text="Other"
+                android:textSize="18sp" />
+
+            <EditText
+                android:id="@+id/issueDescriptionEditText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:hint="Describe the Issue (optional)"
+                android:inputType="textMultiLine"
+                android:lines="4"
+                android:visibility="gone" />
+
+            <Button
+                android:id="@+id/helpAndSupportSubmitButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:enabled="false"
+                android:text="Submit Ticket" />
+
+        </LinearLayout>
+
+    </RelativeLayout>
+
+</RelativeLayout>

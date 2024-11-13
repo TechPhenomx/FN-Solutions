@@ -59,31 +59,31 @@ public class SplashActivity extends AppCompatActivity {
         }, 4000);
     }
 
-    public void getUserData(FirebaseUser user) {
-
-        DocumentReference userDatabase = db.collection("user").document(currentUser.getUid());
-
-        userDatabase.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                if (task.isSuccessful()) {
-                    DocumentSnapshot document = task.getResult();
-                    if (document.exists()) {
-
-                        String userName = document.getString("name");
-
-                        Intent moveToMain = new Intent(SplashActivity.this, MainActivity.class);
-                        moveToMain.putExtra("name", userName);
-                        startActivity(moveToMain);
-                        finish();
-
-                    } else {
-                        Log.d("TAG", "No such document");
-                    }
-                } else {
-                    Log.d("TAG", "get failed with ", task.getException());
-                }
-            }
-        });
-    }
+//    public void getUserData(FirebaseUser user) {
+//
+//        DocumentReference userDatabase = db.collection("user").document(currentUser.getUid());
+//
+//        userDatabase.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+//            @Override
+//            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+//                if (task.isSuccessful()) {
+//                    DocumentSnapshot document = task.getResult();
+//                    if (document.exists()) {
+//
+//                        String userName = document.getString("name");
+//
+//                        Intent moveToMain = new Intent(SplashActivity.this, MainActivity.class);
+//                        moveToMain.putExtra("name", userName);
+//                        startActivity(moveToMain);
+//                        finish();
+//
+//                    } else {
+//                        Log.d("TAG", "No such document");
+//                    }
+//                } else {
+//                    Log.d("TAG", "get failed with ", task.getException());
+//                }
+//            }
+//        });
+//    }
 }

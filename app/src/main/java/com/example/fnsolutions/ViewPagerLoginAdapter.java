@@ -30,9 +30,14 @@ public class ViewPagerLoginAdapter extends FragmentStateAdapter {
     }
 
     // Method to get tab titles
+
+
+
+
+    
     public CharSequence getTabTitle(int position) {
         if(position == 0){
-            return "Email";
+            return "Username";
         }else{
             return "Phone";
         }

@@ -82,7 +82,8 @@ public class MainActivity extends AppCompatActivity {
         dataUsageCard.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(MainActivity.this, dataUsageActivity.class));
+//                startActivity(new Intent(MainActivity.this, dataUsageActivity.class));
+                Toast.makeText(MainActivity.this, "Not Available", Toast.LENGTH_SHORT).show();
             }
         });
 

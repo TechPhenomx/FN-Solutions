@@ -15,10 +15,10 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="10dp"
-            android:hint="Email">
+            android:hint="Username">
 
             <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/loginEmail"
+                android:id="@+id/loginUsername"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="textEmailAddress" />
@@ -41,8 +41,8 @@
             android:id="@+id/emailLoginButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Continue"
-            android:enabled="false"/>
+            android:enabled="false"
+            android:text="Continue" />
 
     </LinearLayout>
 
